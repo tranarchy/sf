@@ -2,24 +2,24 @@
 .global _main
 
 .equ SYSCALL, 0
-.equ EXIT, 1
-.equ FORK, 2
-.equ READ, 3
-.equ WRITE, 4
-.equ OPEN, 5
-.equ CLOSE, 6
-.equ WAIT4, 7
-.equ UNLINK, 10
-.equ CHDIR, 12
-.equ GETPID, 20
-.equ IOCTL, 54
-.equ SYMLINK, 57
-.equ EXECVE, 59
-.equ FCNTL, 92
-.equ MKDIR, 136
-.equ RMDIR, 137
-.equ STAT, 188
-.equ GETDIRENTRIES, 196
+.equ SYS_EXIT, 1
+.equ SYS_FORK, 2
+.equ SYS_READ, 3
+.equ SYS_WRITE, 4
+.equ SYS_OPEN, 5
+.equ SYS_CLOSE, 6
+.equ SYS_WAIT4, 7
+.equ SYS_UNLINK, 10
+.equ SYS_CHDIR, 12
+.equ SYS_GETPID, 20
+.equ SYS_IOCTL, 54
+.equ SYS_SYMLINK, 57
+.equ SYS_EXECVE, 59
+.equ SYS_FCNTL, 92
+.equ SYS_MKDIR, 136
+.equ SYS_RMDIR, 137
+.equ SYS_STAT, 188
+.equ SYS_GETDIRENTRIES, 196
 
 ; termios.h
 .equ ICANON, 256
@@ -63,7 +63,7 @@
 
 _main:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -78,7 +78,7 @@ _main:
     adrp x21, termios@PAGE
     add x21, x21, termios@PAGEOFF
 
-    mov x16, IOCTL
+    mov x16, SYS_IOCTL
     mov x0, #0
     ldr x1, =TIOCGETA
     mov x2, x21
@@ -111,14 +111,14 @@ create_termios_new:
 
 set_termios:
     ; hide cursor
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, hide_cursor@PAGE
     add x1, x1, hide_cursor@PAGEOFF
     ldr x2, =6
     svc SYSCALL
 
-    mov x16, IOCTL
+    mov x16, SYS_IOCTL
     mov x0, #0
     ldr x1, =TIOCSETA
     adrp x2, termios_new@PAGE
@@ -129,14 +129,14 @@ set_termios:
 
 set_termios_old:
     ; show cursor
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, show_cursor@PAGE
     add x1, x1, show_cursor@PAGEOFF
     ldr x2, =6
     svc SYSCALL
 
-    mov x16, IOCTL
+    mov x16, SYS_IOCTL
     mov x0, #0
     ldr x1, =TIOCSETA
     adrp x2, termios@PAGE
@@ -147,7 +147,7 @@ set_termios_old:
 
 get_input:
     ; read stdin
-    mov x16, READ
+    mov x16, SYS_READ
     mov x0, #0
     adrp x1, input@PAGE
     add x1, x1, input@PAGEOFF
@@ -228,7 +228,7 @@ get_input:
     beq edit_entry
 
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -237,7 +237,7 @@ get_input:
 
 open_dir:
     ; open cwd
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, cwd@PAGE
     add x0, x0, cwd@PAGEOFF
     mov x1, #0
@@ -258,7 +258,7 @@ open_dir:
 
 get_entries:
     ; getdirentries
-    mov x16, GETDIRENTRIES
+    mov x16, SYS_GETDIRENTRIES
     mov x0, x19
     mov x1, x20
     mov x2, #4095
@@ -312,14 +312,14 @@ get_entry:
 
 print_entry:
     ; print d_name
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     mov x1, x24
     mov x2, x9
     svc SYSCALL
 
     ; print newline
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, newline@PAGE
     add x1, x1, newline@PAGEOFF
@@ -342,12 +342,12 @@ finished_listing:
     bgt prev_entry_index
 
     ; close pwd
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
     ; print newline
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, newline@PAGE
     add x1, x1, newline@PAGEOFF
@@ -355,7 +355,7 @@ finished_listing:
     svc SYSCALL
 
     ; highlight selected
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, highlight_selected@PAGE
     add x1, x1, highlight_selected@PAGEOFF
@@ -363,7 +363,7 @@ finished_listing:
     svc SYSCALL
 
     ; print selected entry
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, selected_entry@PAGE
     add x1, x1, selected_entry@PAGEOFF
@@ -371,7 +371,7 @@ finished_listing:
     svc SYSCALL
 
     ; print newline
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, newline@PAGE
     add x1, x1, newline@PAGEOFF
@@ -382,7 +382,7 @@ finished_listing:
 
 prev_entry_index:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -404,7 +404,7 @@ prev_entry_index:
 
 next_entry_index:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -423,7 +423,7 @@ next_entry_index:
 
 highlight_entry:
     ; highlight entry
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, highlight_cur@PAGE
     add x1, x1, highlight_cur@PAGEOFF
@@ -471,7 +471,7 @@ null_term:
     strb w3, [x28]
 
 set_entry_path:
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, cur_entry@PAGE
     add x0, x0, cur_entry@PAGEOFF
     mov x1, #0
@@ -480,14 +480,14 @@ set_entry_path:
 
     mov x19, x0
 
-    mov x16, FCNTL
+    mov x16, SYS_FCNTL
     mov x0, x19
     mov x1, #50
     adrp x2, cur_entry@PAGE
     add x2, x2, cur_entry@PAGEOFF
     svc SYSCALL
 
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
@@ -496,7 +496,7 @@ set_entry_path:
 
 print_dir_color:
     ; color dir entry
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, dir_color@PAGE
     add x1, x1, dir_color@PAGEOFF
@@ -507,7 +507,7 @@ print_dir_color:
 
 print_link_color:
     ; color dir entry
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, link_color@PAGE
     add x1, x1, link_color@PAGEOFF
@@ -534,7 +534,7 @@ change_workspaces:
 
 change_workspace_1:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -573,7 +573,7 @@ clear_loop_workspace_1:
     b clear_loop_workspace_1
 
 populate_workspace_1:
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, cwd@PAGE
     add x0, x0, cwd@PAGEOFF
     mov x1, #0
@@ -582,21 +582,21 @@ populate_workspace_1:
 
     mov x19, x0
 
-    mov x16, FCNTL
+    mov x16, SYS_FCNTL
     mov x0, x19
     mov x1, #50
     adrp x2, workspace_0@PAGE
     add x2, x2, workspace_0@PAGEOFF
     svc SYSCALL
 
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
     b open_dir
 
 chdir_workspace_1:
-    mov x16, CHDIR
+    mov x16, SYS_CHDIR
     adrp x0, workspace_0@PAGE
     add x0, x0, workspace_0@PAGEOFF
     svc SYSCALL
@@ -606,7 +606,7 @@ chdir_workspace_1:
 change_workspace_2:
 
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -645,7 +645,7 @@ clear_loop_workspace_2:
     b clear_loop_workspace_2
 
 populate_workspace_2:
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, cwd@PAGE
     add x0, x0, cwd@PAGEOFF
     mov x1, #0
@@ -654,21 +654,21 @@ populate_workspace_2:
 
     mov x19, x0
 
-    mov x16, FCNTL
+    mov x16, SYS_FCNTL
     mov x0, x19
     mov x1, #50
     adrp x2, workspace_1@PAGE
     add x2, x2, workspace_1@PAGEOFF
     svc SYSCALL
 
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
     b open_dir
 
 chdir_workspace_2:
-    mov x16, CHDIR
+    mov x16, SYS_CHDIR
     adrp x0, workspace_1@PAGE
     add x0, x0, workspace_1@PAGEOFF
     svc SYSCALL
@@ -677,7 +677,7 @@ chdir_workspace_2:
 
 select_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -717,7 +717,7 @@ copy_cur_to_selected:
 
 remove_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -741,7 +741,7 @@ remove_entry:
     cmp x1, #DT_DIR
     beq remove_dir
 
-    mov x16, UNLINK
+    mov x16, SYS_UNLINK
     adrp x0, cur_entry@PAGE
     add x0, x0, cur_entry@PAGEOFF
     svc SYSCALL
@@ -749,7 +749,7 @@ remove_entry:
     b open_dir
 
 remove_dir:
-    mov x16, RMDIR
+    mov x16, SYS_RMDIR
     adrp x0, cur_entry@PAGE
     add x0, x0, cur_entry@PAGEOFF
     svc SYSCALL
@@ -783,7 +783,7 @@ prompt_move_entry:
 
 new_file_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -808,7 +808,7 @@ new_file_entry:
 
     strb w5, [x0, x4]
 
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, input@PAGE
     add x0, x0, input@PAGEOFF
     mov x1, #513
@@ -817,7 +817,7 @@ new_file_entry:
 
     mov x19, x0
 
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
@@ -825,7 +825,7 @@ new_file_entry:
 
 new_dir_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -850,7 +850,7 @@ new_dir_entry:
 
     strb w5, [x0, x4]
 
-    mov x16, MKDIR
+    mov x16, SYS_MKDIR
     adrp x0, input@PAGE
     add x0, x0, input@PAGEOFF
     mov x1, #0755
@@ -860,7 +860,7 @@ new_dir_entry:
 
 new_symlink_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -885,7 +885,7 @@ new_symlink_entry:
 
     strb w5, [x0, x4]
 
-    mov x16, SYMLINK
+    mov x16, SYS_SYMLINK
     adrp x0, selected_entry@PAGE
     add x0, x0, selected_entry@PAGEOFF
     adrp x1, input@PAGE
@@ -896,7 +896,7 @@ new_symlink_entry:
 
 copy_entry:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -925,7 +925,7 @@ copy_entry:
     sub sp, sp, #144
     mov x20, sp
 
-    mov x16, STAT
+    mov x16, SYS_STAT
     adrp x0, selected_entry@PAGE
     add x0, x0, selected_entry@PAGEOFF
     mov x1, x20
@@ -935,7 +935,7 @@ copy_entry:
     and w9, w8, #0777
 
     ; open selected entry
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, selected_entry@PAGE
     add x0, x0, selected_entry@PAGEOFF
     mov x1, #0
@@ -945,7 +945,7 @@ copy_entry:
     mov x19, x0
 
     ; open copied entry
-    mov x16, OPEN
+    mov x16, SYS_OPEN
     adrp x0, input@PAGE
     add x0, x0, input@PAGEOFF
     mov x1, #513
@@ -960,7 +960,7 @@ copy_file:
     mov x21, sp
 
     ; read selected entry
-    mov x16, READ
+    mov x16, SYS_READ
     mov x0, x19
     mov x1, x21
     mov x2, #4095
@@ -969,7 +969,7 @@ copy_file:
     mov x22, x0
 
     ; write to file
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, x20
     mov x1, x21
     mov x2, x22
@@ -979,11 +979,11 @@ copy_file:
     bgt copy_file
    
 close_copy_files:
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x19
     svc SYSCALL
 
-    mov x16, CLOSE
+    mov x16, SYS_CLOSE
     mov x0, x20
     svc SYSCALL
 
@@ -994,7 +994,7 @@ close_copy_files:
 
 delete_copied_file:
 
-    mov x16, UNLINK
+    mov x16, SYS_UNLINK
     adrp x0, selected_entry@PAGE
     add x0, x0, selected_entry@PAGEOFF
     svc SYSCALL
@@ -1002,12 +1002,12 @@ delete_copied_file:
     b set_termios
 
 edit_entry:
-    mov x16, FORK
+    mov x16, SYS_FORK
     svc SYSCALL
 
     mov x20, x0
 
-    mov x16, GETPID
+    mov x16, SYS_GETPID
     svc SYSCALL
 
     cmp x20, x0
@@ -1016,7 +1016,7 @@ edit_entry:
     sub sp, sp, #16
     mov x21, sp
 
-    mov x16, WAIT4
+    mov x16, SYS_WAIT4
     mov x0, x20
     mov x1, x21
     mov x2, #0
@@ -1024,7 +1024,7 @@ edit_entry:
     svc SYSCALL
 
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1036,7 +1036,7 @@ edit_entry:
 forked_editor:
 
     ; show cursor
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, show_cursor@PAGE
     add x1, x1, show_cursor@PAGEOFF
@@ -1056,7 +1056,7 @@ forked_editor:
 
     str xzr, [x5, #16]
 
-    mov x16, EXECVE
+    mov x16, SYS_EXECVE
     adrp x0, text_editor_path@PAGE
     add x0, x0, text_editor_path@PAGEOFF
     mov x1, x5
@@ -1064,7 +1064,7 @@ forked_editor:
     svc SYSCALL
 
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1076,7 +1076,7 @@ forked_editor:
 
 jump_to_first:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1095,7 +1095,7 @@ jump_to_first:
 
 jump_to_last:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1114,7 +1114,7 @@ jump_to_last:
     
 set_next_dir:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1130,7 +1130,7 @@ set_next_dir:
 
     str x1, [x0]
 
-    mov x16, CHDIR
+    mov x16, SYS_CHDIR
     adrp x0, cur_entry@PAGE
     add x0, x0, cur_entry@PAGEOFF
     svc SYSCALL
@@ -1149,7 +1149,7 @@ set_next_dir:
 
 set_prev_dir:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1165,7 +1165,7 @@ set_prev_dir:
 
     str x1, [x0]
 
-    mov x16, CHDIR
+    mov x16, SYS_CHDIR
     adrp x0, last_dir@PAGE
     add x0, x0, last_dir@PAGEOFF
     svc SYSCALL
@@ -1184,7 +1184,7 @@ set_prev_dir:
 
 exit:
     ; clear
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, clear@PAGE
     add x1, x1, clear@PAGEOFF
@@ -1192,7 +1192,7 @@ exit:
     svc SYSCALL
 
     ; show cursor
-    mov x16, WRITE
+    mov x16, SYS_WRITE
     mov x0, #1
     adrp x1, show_cursor@PAGE
     add x1, x1, show_cursor@PAGEOFF
@@ -1200,7 +1200,7 @@ exit:
     svc SYSCALL
 
     ; exit
-    mov x16, EXIT
+    mov x16, SYS_EXIT
     mov x0, #0
     svc SYSCALL
 
